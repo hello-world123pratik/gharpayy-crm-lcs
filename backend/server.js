@@ -4,7 +4,9 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+
+// UPDATED: Standard CORS to allow your future Vercel URL
+app.use(cors()); 
 app.use(express.json());
 
 const Agent = require('./models/Agent');
@@ -12,7 +14,6 @@ const Agent = require('./models/Agent');
 mongoose.connect(process.env.MONGO_URI).then(async () => {
   console.log("Gharpayy CRM Database Connected");
   
-  // Bootstrap: Initialize Agents if none exist [cite: 111]
   const count = await Agent.countDocuments();
   if (count === 0) {
     await Agent.create([
@@ -21,6 +22,11 @@ mongoose.connect(process.env.MONGO_URI).then(async () => {
     ]);
     console.log("System Initialized: Default agents created.");
   }
+}).catch(err => console.error("DB Connection Error:", err));
+
+// NEW: Health Check Route to fix "Cannot GET /" on Render
+app.get("/", (req, res) => {
+  res.send("Gharpayy CRM API is live and running...");
 });
 
 app.use('/api/leads', require('./routes/leadRoutes'));
