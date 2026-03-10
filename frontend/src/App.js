@@ -12,10 +12,14 @@ function App() {
   const [leads, setLeads] = useState([]);
   const [stats, setStats] = useState({});
 
-  // UPDATED: Points to Render in production, localhost in development
+  /**
+   * API_URL CONFIGURATION
+   * Logic: If running on your own computer (localhost), use the local port.
+   * If running on the web (Vercel), use your live Render backend link.
+   */
   const API_URL = window.location.hostname === "localhost" 
     ? "http://localhost:5000/api/leads" 
-    : "https://your-backend-name.onrender.com/api/leads"; // REPLACE THIS with your Render URL
+    : "https://gharpayy-crm-lcs.onrender.com/api/leads";
 
   const loadData = async () => {
     try {
@@ -32,9 +36,10 @@ function App() {
 
   useEffect(() => {
     loadData();
+    // Refresh every 60 seconds to keep data fresh
     const interval = setInterval(loadData, 60000); 
     return () => clearInterval(interval);
-  }, [API_URL]); // Added dependency
+  }, [API_URL]);
 
   const handleUpdate = async (id, stage) => {
     let payload = { status: stage };
