@@ -11,7 +11,11 @@ const STAGES = [
 function App() {
   const [leads, setLeads] = useState([]);
   const [stats, setStats] = useState({});
-  const API_URL = "http://localhost:5000/api/leads";
+
+  // UPDATED: Points to Render in production, localhost in development
+  const API_URL = window.location.hostname === "localhost" 
+    ? "http://localhost:5000/api/leads" 
+    : "https://your-backend-name.onrender.com/api/leads"; // REPLACE THIS with your Render URL
 
   const loadData = async () => {
     try {
@@ -21,19 +25,20 @@ function App() {
       ]);
       setLeads(leadsRes.data);
       setStats(statsRes.data);
-    } catch (err) { console.error("Sync Error:", err); }
+    } catch (err) { 
+      console.error("Sync Error:", err); 
+    }
   };
 
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 60000); 
     return () => clearInterval(interval);
-  }, []);
+  }, [API_URL]); // Added dependency
 
   const handleUpdate = async (id, stage) => {
     let payload = { status: stage };
 
-    // Visit Scheduling Logic 
     if (stage === "Visit Scheduled") {
       const prop = prompt("Enter Property Name:");
       const date = prompt("Enter Visit Date/Time (YYYY-MM-DD):");
@@ -42,18 +47,20 @@ function App() {
       payload.scheduledAt = date;
     }
 
-    // Mark Visit Outcome 
     if (stage === "Visit Completed") {
       const outcome = prompt("What was the visit outcome? (Interested/Not Interested/No Show)");
       if (!outcome) return;
       payload.outcome = outcome;
     }
 
-    await axios.put(`${API_URL}/${id}`, payload);
-    loadData();
+    try {
+      await axios.put(`${API_URL}/${id}`, payload);
+      loadData();
+    } catch (err) {
+      console.error("Update Error:", err);
+    }
   };
 
-  // 24h Inactivity check for follow-up reminder 
   const isOverdue = (updatedAt) => (new Date() - new Date(updatedAt)) > 86400000;
 
   return (
